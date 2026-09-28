@@ -1,0 +1,1443 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Bite & Bliss - Food Ordering</title>
+
+    <link
+        rel="icon"
+        type="image/png"
+        href="images/favicon.png"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{% static 'food/css/style.css' %}">
+
+</head>
+
+<body>
+
+
+    <!-- =====================================================
+         NAVBAR
+    ====================================================== -->
+
+    <header class="navbar">
+
+        <div class="logo">
+            🍔 Bite & Bliss
+        </div>
+
+
+        <nav>
+
+            <a href="#">
+                Home
+            </a>
+
+            <a href="#menu">
+                Menu
+            </a>
+
+            <a href="#about">
+                About
+            </a>
+
+            <a href="#contact">
+                Contact
+            </a>
+
+        </nav>
+
+
+        <div
+            class="auth-buttons"
+            id="authButtons"
+        >
+
+            <button
+                class="login-btn"
+                onclick="openLogin()"
+                type="button"
+            >
+                Login
+            </button>
+
+
+            <button
+                class="register-btn"
+                onclick="openRegister()"
+                type="button"
+            >
+                Register
+            </button>
+
+        </div>
+        
+        <button
+                type="button"
+                id="favoritesBtn"
+                class="favorites-nav-btn"
+            >
+                ❤️ My Favorites
+            </button>
+
+        <button
+            class="cart-btn"
+            id="cartBtn"
+            type="button"
+        >
+
+            🛒 Cart
+
+            <span id="cartCount">
+                0
+            </span>
+
+        </button>
+
+    </header>
+
+
+    <!-- =====================================================
+         HERO
+    ====================================================== -->
+
+    <section class="hero">
+
+        <div class="hero-content">
+
+            <p class="small-title">
+                🍴 Delicious food, delivered to you
+            </p>
+
+
+            <h1>
+
+                Find Your<br>
+
+                <span>
+                    Favourite Food
+                </span>
+
+            </h1>
+
+
+            <p class="description">
+
+                Discover delicious meals from our menu
+                and order your favourite food with just
+                a few clicks.
+
+            </p>
+
+
+            <div class="search-box">
+
+                <input
+                    type="text"
+                    id="searchInput"
+                    name="food-search"
+                    placeholder="Search for food..."
+                    autocomplete="off"
+                    autocorrect="off"
+                    autocapitalize="off"
+                    spellcheck="false"
+                    inputmode="search"
+                >
+
+
+                <button
+                    id="searchBtn"
+                    type="button"
+                >
+                    🔍 Search
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <div class="hero-image">
+
+            <div class="food-circle">
+
+                <img
+                    src="{% static 'food/images/pizza.jpg' %}"
+                    alt="Delicious Pizza"
+                >
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         MENU
+    ====================================================== -->
+
+    <section
+        class="menu-section"
+        id="menu"
+    >
+
+        <h2>
+            Explore Our Menu
+        </h2>
+
+
+        <p>
+            Choose from a variety of delicious food
+        </p>
+
+
+        <div class="categories">
+
+            <button
+                class="category active"
+                data-category="All"
+                type="button"
+            >
+                All
+            </button>
+
+
+            <button
+                class="category"
+                data-category="Pizza"
+                type="button"
+            >
+                Pizza
+            </button>
+
+
+            <button
+                class="category"
+                data-category="Burger"
+                type="button"
+            >
+                Burger
+            </button>
+
+
+            <button
+                class="category"
+                data-category="Indian"
+                type="button"
+            >
+                Indian
+            </button>
+
+
+            <button
+                class="category"
+                data-category="Pasta"
+                type="button"
+            >
+                Pasta
+            </button>
+
+
+            <button
+                class="category"
+                data-category="Drinks"
+                type="button"
+            >
+                Drinks
+            </button>
+
+
+            <button
+                class="category"
+                data-category="Snacks"
+                type="button"
+            >
+                Snacks
+            </button>
+
+        </div>
+
+
+        <!-- IMPORTANT:
+             This ID matches script.js
+        -->
+
+        <div
+            class="food-container"
+            id="food-container"
+        >
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         ABOUT
+    ====================================================== -->
+
+    <section
+        class="about-section"
+        id="about"
+    >
+
+        <div class="about-content">
+
+            <p class="section-tag">
+                ABOUT US
+            </p>
+
+
+            <h2>
+
+                Good Food.
+
+                <span>
+                    Good Mood.
+                </span>
+
+            </h2>
+
+
+            <p>
+
+                At Bite & Bliss, we believe that great
+                food brings people together. We prepare
+                delicious meals using quality ingredients
+                and deliver them straight to your doorstep.
+
+            </p>
+
+
+            <div class="about-features">
+
+                <div>
+
+                    <strong>
+                        100+
+                    </strong>
+
+                    <span>
+                        Food Items
+                    </span>
+
+                </div>
+
+
+                <div>
+
+                    <strong>
+                        4.8 ⭐
+                    </strong>
+
+                    <span>
+                        Average Rating
+                    </span>
+
+                </div>
+
+
+                <div>
+
+                    <strong>
+                        30 min
+                    </strong>
+
+                    <span>
+                        Fast Delivery
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         CONTACT
+    ====================================================== -->
+
+    <section
+        class="contact-section"
+        id="contact"
+    >
+
+        <div class="contact-content">
+
+            <p class="section-tag">
+                CONTACT US
+            </p>
+
+
+            <h2>
+
+                We'd Love To
+
+                <span>
+                    Hear From You
+                </span>
+
+            </h2>
+
+
+            <p>
+
+                Have a question, suggestion, or feedback?
+                Get in touch with the Bite & Bliss team.
+
+            </p>
+
+
+            <div class="contact-details">
+
+                <div class="contact-card">
+
+                    <div class="contact-icon">
+                        📧
+                    </div>
+
+                    <h3>
+                        Email
+                    </h3>
+
+                    <a
+                        href="mailto:hello@biteandbliss.com"
+                    >
+                        hello@biteandbliss.com
+                    </a>
+
+                </div>
+
+
+                <div class="contact-card">
+
+                    <div class="contact-icon">
+                        📞
+                    </div>
+
+                    <h3>
+                        Phone
+                    </h3>
+
+                    <a
+                        href="tel:+919876543210"
+                    >
+                        +91 98765 43210
+                    </a>
+
+                </div>
+
+
+                <div class="contact-card">
+
+                    <div class="contact-icon">
+                        📍
+                    </div>
+
+                    <h3>
+                        Location
+                    </h3>
+
+                    <p>
+                        Kakkanad, Kerala
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         LOGIN
+    ====================================================== -->
+
+    <div
+        class="auth-overlay"
+        id="loginOverlay"
+    >
+
+        <div class="auth-panel">
+
+            <button
+                class="auth-close"
+                onclick="closeLogin()"
+                type="button"
+            >
+                ✕
+            </button>
+
+
+            <h2>
+                Welcome Back 👋
+            </h2>
+
+
+            <p>
+                Login to your Bite & Bliss account
+            </p>
+
+
+            <div class="form-group">
+
+                <label for="loginUsername">
+                    Username
+                </label>
+
+
+                <input
+                    type="text"
+                    id="loginUsername"
+                    name="login-username"
+                    placeholder="Enter username"
+                    autocomplete="username"
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="loginPassword">
+                    Password
+                </label>
+
+
+                <input
+                    type="password"
+                    id="loginPassword"
+                    name="login-password"
+                    placeholder="Enter password"
+                    autocomplete="current-password"
+                >
+
+            </div>
+
+
+            <button
+                class="auth-submit"
+                onclick="loginUser()"
+                type="button"
+            >
+                Login
+            </button>
+
+
+            <p class="auth-switch">
+
+                Don't have an account?
+
+                <button
+                    onclick="switchToRegister()"
+                    type="button"
+                >
+                    Register
+                </button>
+
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         REGISTER
+    ====================================================== -->
+
+    <div
+        class="auth-overlay"
+        id="registerOverlay"
+    >
+
+        <div class="auth-panel">
+
+            <button
+                class="auth-close"
+                onclick="closeRegister()"
+                type="button"
+            >
+                ✕
+            </button>
+
+
+            <h2>
+                Create Account 🍔
+            </h2>
+
+
+            <p>
+                Join Bite & Bliss today
+            </p>
+
+
+            <div class="form-group">
+
+                <label for="registerUsername">
+                    Username
+                </label>
+
+
+                <input
+                    type="text"
+                    id="registerUsername"
+                    name="register-username"
+                    placeholder="Choose a username"
+                    autocomplete="username"
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="registerEmail">
+                    Email
+                </label>
+
+
+                <input
+                    type="email"
+                    id="registerEmail"
+                    name="register-email"
+                    placeholder="Enter your email"
+                    autocomplete="email"
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="registerPassword">
+                    Password
+                </label>
+
+
+                <input
+                    type="password"
+                    id="registerPassword"
+                    name="register-password"
+                    placeholder="Create a password"
+                    autocomplete="new-password"
+                >
+
+            </div>
+
+
+            <button
+                class="auth-submit"
+                onclick="registerUser()"
+                type="button"
+            >
+                Create Account
+            </button>
+
+
+            <p class="auth-switch">
+
+                Already have an account?
+
+                <button
+                    onclick="switchToLogin()"
+                    type="button"
+                >
+                    Login
+                </button>
+
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         CART
+    ====================================================== -->
+
+    <div
+        class="cart-overlay"
+        id="cartOverlay"
+    >
+
+        <div class="cart-panel">
+
+            <div class="cart-header">
+
+                <h2>
+                    🛒 Your Cart
+                </h2>
+
+
+                <button
+                    id="closeCart"
+                    type="button"
+                >
+                    ✕
+                </button>
+
+            </div>
+
+
+            <div
+                class="cart-items"
+                id="cartItems"
+            >
+            </div>
+
+
+            <div class="cart-footer">
+
+                <div class="cart-total">
+
+                    <span>
+                        Total
+                    </span>
+
+
+                    <strong id="cartTotal">
+                        ₹0
+                    </strong>
+
+                </div>
+
+
+                <button
+                    class="checkout-btn"
+                    id="checkoutBtn"
+                    type="button"
+                >
+                    Proceed to Checkout
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         CHECKOUT
+    ====================================================== -->
+
+    <div
+        class="checkout-overlay"
+        id="checkoutOverlay"
+    >
+
+        <div class="checkout-panel">
+
+            <div class="checkout-header">
+
+                <h2>
+                    🧾 Checkout
+                </h2>
+
+
+                <button
+                    id="closeCheckout"
+                    type="button"
+                >
+                    ✕
+                </button>
+
+            </div>
+
+
+            <div class="checkout-content">
+
+                <!-- DELIVERY DETAILS -->
+
+                <div class="customer-details">
+
+                    <h3>
+                        Delivery Details
+                    </h3>
+
+
+                    <div class="form-group">
+
+                        <label for="customerName">
+                            Full Name
+                        </label>
+
+
+                        <input
+                            type="text"
+                            id="customerName"
+                            name="customer-name"
+                            placeholder="Enter your name"
+                            autocomplete="name"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="customerPhone">
+                            Phone Number
+                        </label>
+
+
+                        <input
+                            type="tel"
+                            id="customerPhone"
+                            name="customer-phone"
+                            placeholder="Enter your phone number"
+                            autocomplete="tel"
+                        >
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="customerAddress">
+                            Delivery Address
+                        </label>
+
+
+                        <textarea
+                            id="customerAddress"
+                            name="customer-address"
+                            placeholder="Enter your complete address"
+                            rows="4"
+                        ></textarea>
+
+                    </div>
+
+
+                    <!-- PAYMENT METHOD -->
+
+                    <div class="form-group">
+
+                        <label for="paymentMethod">
+                            Payment Method
+                        </label>
+
+
+                        <select
+                            id="paymentMethod"
+                            name="payment-method"
+                        >
+
+                            <option value="">
+                                Select payment method
+                            </option>
+
+
+                            <option value="Cash on Delivery">
+                                Cash on Delivery
+                            </option>
+
+
+                            <option value="UPI">
+                                UPI
+                            </option>
+
+
+                            <option value="Card">
+                                Credit / Debit Card
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ORDER SUMMARY -->
+
+                <div class="order-summary">
+
+                    <h3>
+                        Order Summary
+                    </h3>
+
+
+                    <div id="checkoutItems">
+                    </div>
+
+
+                    <div class="summary-line">
+
+                        <span>
+                            Subtotal
+                        </span>
+
+
+                        <span id="checkoutSubtotal">
+                            ₹0
+                        </span>
+
+                    </div>
+
+
+                    <div class="summary-line">
+
+                        <span>
+                            Delivery Fee
+                        </span>
+
+
+                        <span id="deliveryFee">
+                            ₹40
+                        </span>
+
+                    </div>
+
+
+                    <div class="summary-total">
+
+                        <span>
+                            Total
+                        </span>
+
+
+                        <strong id="checkoutTotal">
+                            ₹40
+                        </strong>
+
+                    </div>
+
+
+                    <!-- IMPORTANT:
+                         Payment starts here
+                    -->
+
+                    <button
+                        class="place-order-btn"
+                        id="placeOrderBtn"
+                        type="button"
+                        onclick="handlePayment()"
+                    >
+                        Proceed to Payment
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         PAYMENT
+    ====================================================== -->
+
+    <div
+        class="payment-overlay"
+        id="paymentOverlay"
+    >
+
+        <div class="payment-panel">
+
+            <div class="payment-header">
+
+                <h2>
+                    💳 Payment
+                </h2>
+
+
+                <button
+                    type="button"
+                    onclick="closePayment()"
+                >
+                    ✕
+                </button>
+
+            </div>
+
+
+            <div class="payment-details">
+
+                <p>
+                    Amount to Pay
+                </p>
+
+
+                <h1 id="paymentAmount">
+                    ₹0
+                </h1>
+
+            </div>
+
+
+            <!-- UPI PAYMENT -->
+
+            <div
+                class="payment-option"
+                id="upiPayment"
+            >
+
+                <h3>
+                    📱 UPI Payment
+                </h3>
+
+
+                <p>
+                    Enter your UPI ID
+                </p>
+
+
+                <input
+                    type="text"
+                    id="upiId"
+                    name="upi-id"
+                    placeholder="example@upi"
+                    autocomplete="off"
+                >
+
+            </div>
+
+
+            <!-- CARD PAYMENT -->
+
+            <div
+                class="payment-option"
+                id="cardPayment"
+            >
+
+                <h3>
+                    💳 Card Payment
+                </h3>
+
+
+                <input
+                    type="text"
+                    id="cardNumber"
+                    name="card-number"
+                    placeholder="Card Number"
+                    maxlength="19"
+                    autocomplete="off"
+                >
+
+
+                <div class="card-row">
+
+                    <input
+                        type="text"
+                        id="cardExpiry"
+                        name="card-expiry"
+                        placeholder="MM/YY"
+                        maxlength="5"
+                        autocomplete="off"
+                    >
+
+
+                    <input
+                        type="password"
+                        id="cardCVV"
+                        name="card-cvv"
+                        placeholder="CVV"
+                        maxlength="3"
+                        autocomplete="off"
+                    >
+
+                </div>
+
+            </div>
+
+
+            <button
+                type="button"
+                class="pay-now-btn"
+                onclick="processPayment()"
+            >
+                Pay Now
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         MY ORDERS
+    ====================================================== -->
+
+    <div
+        class="my-orders-overlay"
+        id="myOrdersOverlay"
+    >
+
+        <div class="my-orders-panel">
+
+            <div class="my-orders-header">
+
+                <h2>
+                    📦 My Orders
+                </h2>
+
+
+                <button
+                    id="closeMyOrders"
+                    type="button"
+                    onclick="closeMyOrders()"
+                >
+                    ✕
+                </button>
+
+            </div>
+
+
+            <div
+                class="my-orders-content"
+                id="myOrdersContent"
+            >
+
+                <p>
+                    Loading your orders...
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================================
+     FOOD DETAILS
+====================================================== -->
+
+<div
+    class="food-details-overlay"
+    id="foodDetailsOverlay"
+>
+
+    <div class="food-details-panel">
+
+        <button
+            type="button"
+            class="food-details-close"
+            onclick="closeFoodDetails()"
+        >
+            ✕
+        </button>
+
+        <div class="food-details-image">
+
+            <img
+                id="foodDetailsImage"
+                src="{% static 'food/images/pizza.jpg' %}"
+                alt="Food"
+            >
+
+        </div>
+
+        <div class="food-details-info">
+
+            <p
+                class="food-details-category"
+                id="foodDetailsCategory"
+            >
+                Category
+            </p>
+
+            <span
+    class="food-details-discount"
+    id="foodDetailsDiscount"
+>
+</span>
+
+            <h2 id="foodDetailsName">
+                Food Name
+            </h2>
+
+            <div
+                class="food-details-rating"
+                id="foodDetailsRating"
+            >
+                ⭐ 0.0 (0)
+            </div>
+
+            <p
+                class="food-details-description"
+                id="foodDetailsDescription"
+            >
+                Delicious food from Bite & Bliss.
+            </p>
+
+            <div class="food-details-bottom">
+
+                <strong id="foodDetailsPrice">
+                    ₹0
+                </strong>
+
+                <button
+                    type="button"
+                    class="food-details-add-btn"
+                    id="foodDetailsAddBtn"
+                >
+                    Add to Cart
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+    <!-- =====================================================
+         PROFILE
+    ====================================================== -->
+
+    <div
+        class="profile-overlay"
+        id="profileOverlay"
+    >
+
+        <div class="profile-panel">
+
+            <div class="profile-header">
+
+                <h2>
+                    👤 My Profile
+                </h2>
+
+
+                <button
+                    type="button"
+                    onclick="closeProfile()"
+                >
+                    ✕
+                </button>
+
+            </div>
+
+
+            <div class="profile-avatar">
+                👤
+            </div>
+
+
+            <div class="profile-info">
+
+    <div class="profile-info-item">
+        <span>Username</span>
+        <strong id="profileUsername">-</strong>
+    </div>
+
+    <div class="profile-info-item">
+        <span>Email</span>
+        <strong id="profileEmail">-</strong>
+    </div>
+
+    <div class="profile-info-item">
+        <span>Phone</span>
+        <strong id="profilePhone">-</strong>
+    </div>
+
+    </div> <!-- closes the existing profile-info section -->
+
+<div class="profile-edit-form" id="profileEditForm" style="display: none;">
+
+    <label for="editProfileUsername">Username</label>
+    <input
+        type="text"
+        id="editProfileUsername"
+        placeholder="Enter username"
+    >
+
+    <label for="editProfileEmail">Email</label>
+    <input
+        type="email"
+        id="editProfileEmail"
+        placeholder="Enter email"
+    >
+
+    <label for="editProfilePhone">Phone</label>
+    <input
+        type="text"
+        id="editProfilePhone"
+        placeholder="Enter phone number"
+    >
+
+    <button type="button" id="saveProfileBtn">Save Changes</button>
+    <button type="button" id="cancelProfileEditBtn">Cancel</button>
+
+</div>
+
+<button type="button" id="editProfileBtn">Edit Profile</button>
+
+            <div class="profile-actions">
+
+                <button
+                    type="button"
+                    onclick="openMyOrdersFromProfile()"
+                >
+                    📦 My Orders
+                </button>
+
+
+                <button
+                    type="button"
+                    class="profile-logout-btn"
+                    onclick="logoutUser()"
+                >
+                    Logout
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         TOAST
+    ====================================================== -->
+
+    <div
+        class="toast"
+        id="toast"
+    >
+
+        <span>
+            ✓
+        </span>
+
+
+        <p id="toastMessage">
+            Added to cart
+        </p>
+
+    </div>
+    
+
+    <!-- =========================================================
+     MY FAVORITES
+========================================================= -->
+
+<div
+    class="favorites-overlay"
+    id="favoritesOverlay"
+>
+
+    <div class="favorites-panel">
+
+        <button
+            type="button"
+            class="favorites-close"
+            id="favoritesClose"
+        >
+            ✕
+        </button>
+
+        <div class="favorites-header">
+
+            <h2>❤️ My Favorites</h2>
+
+            <p>
+                Your favorite foods
+            </p>
+
+        </div>
+
+        <div
+            class="favorites-container"
+            id="favoritesContainer"
+        >
+
+            <p class="favorites-loading">
+                Loading favorites...
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ORDER CONFIRMATION POPUP -->
+<div class="order-confirmation-overlay" id="orderConfirmationOverlay">
+
+    <div class="order-confirmation-box">
+
+        <button
+            type="button"
+            class="confirmation-close"
+            onclick="closeOrderConfirmation()"
+            aria-label="Close confirmation"
+        >
+            &times;
+        </button>
+
+        <div class="confirmation-check">
+            ✓
+        </div>
+
+        <h2>Order Placed Successfully!</h2>
+
+        <p class="confirmation-message">
+            Thank you for ordering with Bite & Bliss.
+            Your delicious food is on its way!
+        </p>
+
+        <div class="confirmation-order-id">
+            <span>Order ID</span>
+            <strong id="confirmationOrderId">N/A</strong>
+        </div>
+
+        <div class="confirmation-actions">
+            <button
+                type="button"
+                class="confirmation-primary-btn"
+                onclick="viewOrdersFromConfirmation()"
+            >
+                View My Orders
+            </button>
+
+            <button
+                type="button"
+                class="confirmation-secondary-btn"
+                onclick="closeOrderConfirmation()"
+            >
+                Continue Shopping
+            </button>
+        </div>
+
+    </div>
+
+</div>
+
+    <!-- =====================================================
+         JAVASCRIPT
+    ====================================================== -->
+
+    <script src="{% static 'food/js/script.js' %}"></script>
+
+</body>
+
+</html>

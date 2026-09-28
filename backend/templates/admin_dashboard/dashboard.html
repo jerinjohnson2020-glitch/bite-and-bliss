@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Bite & Bliss - Admin Dashboard</title>
+
+    <link
+        rel="stylesheet"
+        href="/static/food/css/admin-dashboard.css"
+    >
+
+</head>
+
+
+<body>
+
+
+    <!-- =====================================================
+         ADMIN NAVBAR
+         ===================================================== -->
+
+    <nav class="admin-navbar">
+
+        <div class="admin-logo">
+            🍴 Bite & Bliss
+        </div>
+
+        <div class="admin-title">
+            Admin Dashboard
+        </div>
+
+        <div class="admin-actions">
+
+            <div class="admin-user">
+                Administrator
+            </div>
+
+            <a
+                href="/admin-logout/"
+                class="logout-btn"
+            >
+                Logout
+            </a>
+
+        </div>
+
+    </nav>
+
+
+
+    <!-- =====================================================
+         DASHBOARD
+         ===================================================== -->
+
+    <main class="dashboard-container">
+
+
+        <!-- =================================================
+             HEADER
+             ================================================= -->
+
+        <section class="dashboard-header">
+
+            <div>
+
+                <h1>
+                    Dashboard
+                </h1>
+
+                <p>
+                    Monitor food sales and customer orders
+                </p>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =================================================
+             SUMMARY CARDS
+             ================================================= -->
+
+        <section class="summary-cards">
+
+
+            <div class="summary-card">
+
+                <div class="summary-icon">
+                    🛒
+                </div>
+
+                <div>
+
+                    <h3>
+                        Total Orders
+                    </h3>
+
+                    <p id="totalOrders">
+                        0
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="summary-card">
+
+                <div class="summary-icon">
+                    💰
+                </div>
+
+                <div>
+
+                    <h3>
+                        Total Revenue
+                    </h3>
+
+                    <p id="totalRevenue">
+                        ₹0
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="summary-card">
+
+                <div class="summary-icon">
+                    🍔
+                </div>
+
+                <div>
+
+                    <h3>
+                        Foods Sold
+                    </h3>
+
+                    <p id="totalFoodsSold">
+                        0
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="summary-card">
+
+                <div class="summary-icon">
+                    🔥
+                </div>
+
+                <div>
+
+                    <h3>
+                        Top Food
+                    </h3>
+
+                    <p id="topFood">
+                        -
+                    </p>
+
+                </div>
+
+            </div>
+
+
+        </section>
+
+
+
+        <!-- =================================================
+             CUSTOMER ORDERS
+             ================================================= -->
+
+        <section class="dashboard-section">
+
+
+            <div class="section-header">
+
+                <div>
+
+                    <h2>
+                        📦 Customer Orders
+                    </h2>
+
+                    <p>
+                        View all customer orders
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="table-container">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Order ID
+                            </th>
+
+                            <th>
+                                Customer
+                            </th>
+
+                            <th>
+                                Phone
+                            </th>
+
+                            <th>
+                                Amount
+                            </th>
+
+                            <th>
+                                Payment
+                            </th>
+
+                            <th>
+                                Status
+                            </th>
+
+                            <th>
+                                Date
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody id="ordersTable">
+
+                        <tr>
+
+                            <td
+                                colspan="7"
+                                style="text-align:center;"
+                            >
+                                Loading orders...
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+        </section>
+
+
+
+        <!-- =================================================
+             MOST ORDERED FOODS
+             ================================================= -->
+
+        <section class="dashboard-section">
+
+
+            <div class="section-header">
+
+                <div>
+
+                    <h2>
+                        🔥 Most Ordered Foods
+                    </h2>
+
+                    <p>
+                        Foods ranked by quantity sold
+                    </p>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="table-container">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Rank
+                            </th>
+
+                            <th>
+                                Food
+                            </th>
+
+                            <th>
+                                Orders
+                            </th>
+
+                            <th>
+                                Quantity Sold
+                            </th>
+
+                            <th>
+                                Revenue
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody id="foodSalesTable">
+
+                        <tr>
+
+                            <td colspan="5">
+                                Loading food sales...
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+        </section>
+
+
+
+        <!-- =================================================
+             FOOD SALES CHART
+             ================================================= -->
+
+        <section class="dashboard-section">
+
+
+            <div class="section-header">
+
+                <div>
+
+                    <h2>
+                        📊 Food Sales Overview
+                    </h2>
+
+                    <p>
+                        Quantity sold by food
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div
+                class="chart-container"
+                id="foodChart"
+            >
+
+                <p>
+                    Loading chart...
+                </p>
+
+            </div>
+
+
+        </section>
+
+
+    </main>
+
+
+
+    <!-- =====================================================
+         JAVASCRIPT
+         ===================================================== -->
+
+    <script>
+
+
+        // ====================================================
+        // PAGE LOAD
+        // ====================================================
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            function () {
+
+                loadSummary();
+
+                loadFoodSales();
+
+                loadOrders();
+
+            }
+        );
+
+
+
+        // ====================================================
+        // SUMMARY
+        // ====================================================
+
+        async function loadSummary() {
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/api/analytics/summary/"
+                    );
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        "Summary API error: "
+                        + response.status
+                    );
+
+                }
+
+
+                const summary =
+                    await response.json();
+
+
+                document.getElementById(
+                    "totalOrders"
+                ).textContent =
+                    summary.total_orders;
+
+
+                document.getElementById(
+                    "totalRevenue"
+                ).textContent =
+                    "₹" +
+                    Number(
+                        summary.total_revenue || 0
+                    ).toLocaleString(
+                        "en-IN"
+                    );
+
+
+                document.getElementById(
+                    "totalFoodsSold"
+                ).textContent =
+                    summary.total_foods_sold;
+
+
+                document.getElementById(
+                    "topFood"
+                ).textContent =
+                    summary.top_food || "-";
+
+
+            }
+
+            catch (error) {
+
+                console.error(
+                    "Summary Error:",
+                    error
+                );
+
+            }
+
+        }
+
+
+
+        // ====================================================
+        // FOOD SALES
+        // ====================================================
+
+        async function loadFoodSales() {
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/api/analytics/food-sales/"
+                    );
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        "Food sales API error: "
+                        + response.status
+                    );
+
+                }
+
+
+                const foods =
+                    await response.json();
+
+
+                displayFoodTable(
+                    foods
+                );
+
+
+                displayFoodChart(
+                    foods
+                );
+
+
+            }
+
+            catch (error) {
+
+                console.error(
+                    "Food Sales Error:",
+                    error
+                );
+
+            }
+
+        }
+
+
+
+        // ====================================================
+        // DISPLAY FOOD TABLE
+        // ====================================================
+
+        function displayFoodTable(
+            foods
+        ) {
+
+            const table =
+                document.getElementById(
+                    "foodSalesTable"
+                );
+
+
+            if (!table) {
+
+                return;
+
+            }
+
+
+            table.innerHTML = "";
+
+
+            foods.forEach(
+                function (
+                    food,
+                    index
+                ) {
+
+                    const row =
+                        document.createElement(
+                            "tr"
+                        );
+
+
+                    row.innerHTML = `
+
+                        <td class="rank">
+                            #${index + 1}
+                        </td>
+
+                        <td class="food-name">
+                            ${food.food__name}
+                        </td>
+
+                        <td>
+                            ${food.order_count}
+                        </td>
+
+                        <td class="quantity">
+                            ${food.quantity_sold}
+                        </td>
+
+                        <td class="revenue">
+                            ₹${Number(
+                                food.total_revenue || 0
+                            ).toLocaleString("en-IN")}
+                        </td>
+
+                    `;
+
+
+                    table.appendChild(
+                        row
+                    );
+
+                }
+            );
+
+        }
+
+
+
+        // ====================================================
+        // FOOD CHART
+        // ====================================================
+
+        function displayFoodChart(
+            foods
+        ) {
+
+            const chart =
+                document.getElementById(
+                    "foodChart"
+                );
+
+
+            if (!chart) {
+
+                return;
+
+            }
+
+
+            chart.innerHTML = "";
+
+
+            if (
+                !foods ||
+                foods.length === 0
+            ) {
+
+                chart.innerHTML =
+                    "<p>No sales data available.</p>";
+
+                return;
+
+            }
+
+
+            let maxQuantity = 0;
+
+
+            foods.forEach(
+                function (food) {
+
+                    const quantity =
+                        Number(
+                            food.quantity_sold || 0
+                        );
+
+
+                    if (
+                        quantity >
+                        maxQuantity
+                    ) {
+
+                        maxQuantity =
+                            quantity;
+
+                    }
+
+                }
+            );
+
+
+            foods.forEach(
+                function (food) {
+
+                    const quantity =
+                        Number(
+                            food.quantity_sold || 0
+                        );
+
+
+                    const percentage =
+                        maxQuantity > 0
+                            ? (
+                                quantity /
+                                maxQuantity
+                            ) * 100
+                            : 0;
+
+
+                    const row =
+                        document.createElement(
+                            "div"
+                        );
+
+
+                    row.style.width =
+                        "100%";
+
+                    row.style.marginBottom =
+                        "15px";
+
+
+                    row.innerHTML = `
+
+                        <div style="
+                            display:flex;
+                            justify-content:space-between;
+                            margin-bottom:6px;
+                            font-size:14px;
+                        ">
+
+                            <span>
+                                ${food.food__name}
+                            </span>
+
+                            <strong>
+                                ${quantity}
+                            </strong>
+
+                        </div>
+
+
+                        <div style="
+                            width:100%;
+                            height:12px;
+                            background:#eeeeee;
+                            border-radius:20px;
+                            overflow:hidden;
+                        ">
+
+                            <div style="
+                                width:${percentage}%;
+                                height:100%;
+                                background:#ff6b35;
+                                border-radius:20px;
+                            ">
+                            </div>
+
+                        </div>
+
+                    `;
+
+
+                    chart.appendChild(
+                        row
+                    );
+
+                }
+            );
+
+        }
+
+
+
+        // ====================================================
+        // LOAD CUSTOMER ORDERS
+        // ====================================================
+
+        async function loadOrders() {
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/api/admin/orders/",
+                        {
+                            method: "GET",
+                            credentials: "same-origin"
+                        }
+                    );
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        "Orders API error: "
+                        + response.status
+                    );
+
+                }
+
+
+                const orders =
+                    await response.json();
+
+
+                displayOrders(
+                    orders
+                );
+
+
+            }
+
+            catch (error) {
+
+                console.error(
+                    "Orders Error:",
+                    error
+                );
+
+
+                const table =
+                    document.getElementById(
+                        "ordersTable"
+                    );
+
+
+                if (table) {
+
+                    table.innerHTML = `
+
+                        <tr>
+
+                            <td
+                                colspan="7"
+                                style="
+                                    text-align:center;
+                                    color:#d9534f;
+                                "
+                            >
+                                Unable to load orders.
+                            </td>
+
+                        </tr>
+
+                    `;
+
+                }
+
+            }
+
+        }
+        
+// ====================================================
+// AUTO REFRESH ORDERS
+// ====================================================
+
+setInterval(
+    function () {
+
+        loadOrders();
+
+    },
+    10000
+);
+
+
+        // ====================================================
+        // DISPLAY CUSTOMER ORDERS
+        // ====================================================
+
+        function displayOrders(
+            orders
+        ) {
+
+            const table =
+                document.getElementById(
+                    "ordersTable"
+                );
+
+
+            if (!table) {
+
+                return;
+
+            }
+
+
+            table.innerHTML = "";
+
+
+            if (
+                !orders ||
+                orders.length === 0
+            ) {
+
+                table.innerHTML = `
+
+                    <tr>
+
+                        <td
+                            colspan="7"
+                            style="
+                                text-align:center;
+                            "
+                        >
+                            No orders found.
+                        </td>
+
+                    </tr>
+
+                `;
+
+                return;
+
+            }
+
+
+            orders.forEach(
+                function (order) {
+
+                    const row =
+                        document.createElement(
+                            "tr"
+                        );
+
+
+                    const createdDate =
+                        order.created_at
+                            ? new Date(
+                                order.created_at
+                            ).toLocaleString(
+                                "en-IN"
+                            )
+                            : "-";
+
+
+                    row.innerHTML = `
+
+                        <td>
+                            <strong>
+                                ${order.order_id || "-"}
+                            </strong>
+                        </td>
+
+                        <td>
+                            ${order.customer_name || "-"}
+                        </td>
+
+                        <td>
+                            ${order.phone || "-"}
+                        </td>
+
+                        <td>
+                            ₹${Number(
+                                order.total_amount || 0
+                            ).toLocaleString(
+                                "en-IN"
+                            )}
+                        </td>
+
+                        <td>
+                            ${order.payment_method || "-"}
+                        </td>
+
+                        <td>
+                            <span class="order-status">
+                                ${order.status || "Pending"}
+                            </span>
+                        </td>
+
+                        <td>
+                            ${createdDate}
+                        </td>
+
+                    `;
+
+
+                    table.appendChild(
+                        row
+                    );
+
+                }
+            );
+
+        }
+
+
+    </script>
+
+
+</body>
+
+</html>
