@@ -75,6 +75,8 @@ class OrderSerializer(
 
             "payment_method",
 
+            "payment_status",
+
             "total_amount",
 
             "status",

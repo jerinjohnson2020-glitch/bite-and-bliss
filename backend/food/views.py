@@ -1,3 +1,12 @@
+import requests
+import hashlib
+import hmac
+import random
+from decimal import Decimal, InvalidOperation
+from django.shortcuts import redirect
+from django.conf import settings
+from django.http import HttpResponse
+from django.db import transaction
 from django.shortcuts import render
 from django.shortcuts import redirect
 from django.contrib.auth.models import User
@@ -9,6 +18,8 @@ from rest_framework.decorators import (
     authentication_classes,
     permission_classes
 )
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
@@ -74,25 +85,19 @@ def food_list(request):
 # CREATE ORDER
 # ============================================================
 
-@api_view(['POST'])
+@api_view(["POST"])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def create_order(request):
-
     data = request.data
 
-    customer_name = data.get("customer_name")
-    phone = data.get("phone")
-    address = data.get("address")
-    payment_method = data.get("payment_method")
-    total_amount = data.get("total_amount")
-
+    customer_name = str(data.get("customer_name", "")).strip()
+    phone = str(data.get("phone", "")).strip()
+    address = str(data.get("address", "")).strip()
+    payment_method = str(data.get("payment_method", "")).strip()
     order_items = data.get("items", [])
 
-    # --------------------------------------------------------
-    # Validate basic order information
-    # --------------------------------------------------------
-
+    # Validate customer details
     if not customer_name:
         return Response(
             {"error": "Customer name is required"},
@@ -117,17 +122,551 @@ def create_order(request):
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    if not total_amount:
+    # This endpoint is for Cash on Delivery only.
+    if payment_method not in ["Cash on Delivery", "COD"]:
         return Response(
-            {"error": "Total amount is required"},
+            {"error": "Use the PayU endpoint for online payments"},
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    if not order_items:
+    if not isinstance(order_items, list) or not order_items:
         return Response(
             {"error": "Order must contain at least one item"},
             status=status.HTTP_400_BAD_REQUEST
         )
+
+    # Validate cart items and calculate subtotal from database prices.
+    validated_items = []
+    subtotal = Decimal("0.00")
+
+    for item in order_items:
+        if not isinstance(item, dict):
+            return Response(
+                {"error": "Invalid item format"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        food_id = item.get("food")
+        quantity_value = item.get("quantity")
+
+        try:
+            quantity = int(quantity_value)
+        except (TypeError, ValueError):
+            return Response(
+                {"error": "Each item must have a valid quantity"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if quantity <= 0:
+            return Response(
+                {"error": "Quantity must be greater than zero"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            food = Food.objects.get(id=food_id)
+        except (Food.DoesNotExist, TypeError, ValueError):
+            return Response(
+                {"error": f"Food with ID {food_id} was not found"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        food_price = Decimal(str(food.price))
+        subtotal += food_price * quantity
+
+        validated_items.append({
+            "food": food,
+            "quantity": quantity,
+            "price": food_price
+        })
+
+    delivery_fee = Decimal("40.00")
+    total_amount = subtotal + delivery_fee
+
+    # Generate a unique order ID.
+    order_id = "BB" + str(random.randint(100000, 999999))
+
+    while Order.objects.filter(order_id=order_id).exists():
+        order_id = "BB" + str(random.randint(100000, 999999))
+
+    # Create order and order items together.
+    with transaction.atomic():
+        order = Order.objects.create(
+            user=request.user,
+            order_id=order_id,
+            customer_name=customer_name,
+            phone=phone,
+            address=address,
+            payment_method="Cash on Delivery",
+            payment_status="Not Required",
+            total_amount=total_amount,
+            status="Pending"
+        )
+
+        for item in validated_items:
+            OrderItem.objects.create(
+                order=order,
+                food=item["food"],
+                quantity=item["quantity"],
+                price=item["price"]
+            )
+    send_make_order_notification(order)
+    serializer = OrderSerializer(order)
+
+    return Response(
+        serializer.data,
+        status=status.HTTP_201_CREATED
+    )
+
+# ============================================================
+# PAYU PAYMENT INITIATION
+# ============================================================
+
+@api_view(["POST"])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def initiate_payu_payment(request):
+
+    data = request.data
+
+    customer_name = str(data.get("customer_name", "")).strip()
+    phone = str(data.get("phone", "")).strip()
+    address = str(data.get("address", "")).strip()
+    payment_method = str(data.get("payment_method", "")).strip()
+    order_items = data.get("items", [])
+
+    # --------------------------------------------------------
+    # Validate customer details
+    # --------------------------------------------------------
+
+    if not customer_name:
+        return Response(
+            {"error": "Customer name is required"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    if not phone:
+        return Response(
+            {"error": "Phone number is required"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    if not address:
+        return Response(
+            {"error": "Delivery address is required"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    if payment_method not in ["UPI", "Card"]:
+        return Response(
+            {"error": "PayU payment method must be UPI or Card"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    if not isinstance(order_items, list) or not order_items:
+        return Response(
+            {"error": "Order must contain at least one item"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # --------------------------------------------------------
+    # Check PayU configuration
+    # --------------------------------------------------------
+
+    payu_key = getattr(settings, "PAYU_KEY", "")
+    payu_salt = getattr(settings, "PAYU_SALT", "")
+    success_url = getattr(settings, "PAYU_SUCCESS_URL", "")
+    failure_url = getattr(settings, "PAYU_FAILURE_URL", "")
+
+    if not all([payu_key, payu_salt, success_url, failure_url]):
+        return Response(
+            {
+                "error": (
+                    "PayU is not fully configured. "
+                    "Check the PayU key, salt, success URL, and failure URL."
+                )
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+    # --------------------------------------------------------
+    # Validate cart and calculate price from database
+    # --------------------------------------------------------
+
+    validated_items = []
+    subtotal = Decimal("0.00")
+
+    for item in order_items:
+
+        if not isinstance(item, dict):
+            return Response(
+                {"error": "Invalid item format"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        food_id = item.get("food")
+        quantity_value = item.get("quantity")
+
+        try:
+            quantity = int(quantity_value)
+        except (TypeError, ValueError):
+            return Response(
+                {"error": "Each item must have a valid quantity"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if quantity <= 0:
+            return Response(
+                {"error": "Quantity must be greater than zero"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            food = Food.objects.get(id=food_id)
+        except (Food.DoesNotExist, TypeError, ValueError):
+            return Response(
+                {"error": f"Food with ID {food_id} was not found"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Use the database price, not the browser's price.
+        food_price = Decimal(str(food.price))
+        subtotal += food_price * quantity
+
+        validated_items.append({
+            "food": food,
+            "quantity": quantity,
+            "price": food_price
+        })
+
+    delivery_fee = Decimal("40.00")
+    total_amount = subtotal + delivery_fee
+    amount_text = format(total_amount.quantize(Decimal("0.01")), ".2f")
+
+    # --------------------------------------------------------
+    # Create a unique order ID
+    # --------------------------------------------------------
+
+    order_id = "BB" + str(random.randint(100000, 999999))
+
+    while Order.objects.filter(order_id=order_id).exists():
+        order_id = "BB" + str(random.randint(100000, 999999))
+
+    # --------------------------------------------------------
+    # Create pending order and its items
+    # --------------------------------------------------------
+
+    with transaction.atomic():
+
+        order = Order.objects.create(
+            user=request.user,
+            order_id=order_id,
+            customer_name=customer_name,
+            phone=phone,
+            address=address,
+            payment_method=payment_method,
+            total_amount=total_amount,
+            payment_status="Pending",
+            status="Pending"
+        )
+
+        for item in validated_items:
+            OrderItem.objects.create(
+                order=order,
+                food=item["food"],
+                quantity=item["quantity"],
+                price=item["price"]
+            )
+
+    # --------------------------------------------------------
+    # Prepare PayU hosted checkout request
+    # --------------------------------------------------------
+
+    txnid = order.order_id
+    productinfo = f"Bite & Bliss Order {order.order_id}"
+    firstname = customer_name[:60]
+    email = request.user.email or "customer@example.com"
+
+    # Standard PayU hosted-checkout hash:
+    # key|txnid|amount|productinfo|firstname|email|
+    # udf1|udf2|udf3|udf4|udf5||||||salt
+    hash_values = [
+        payu_key,
+        txnid,
+        amount_text,
+        productinfo,
+        firstname,
+        email,
+        "", "", "", "", "",
+        "", "", "", "", "",
+        payu_salt
+    ]
+
+    hash_string = "|".join(hash_values)
+
+    payment_hash = hashlib.sha512(
+        hash_string.encode("utf-8")
+    ).hexdigest()
+
+    payu_fields = {
+        "key": payu_key,
+        "txnid": txnid,
+        "amount": amount_text,
+        "productinfo": productinfo,
+        "firstname": firstname,
+        "email": email,
+        "phone": phone,
+        "surl": success_url,
+        "furl": failure_url,
+        "hash": payment_hash,
+    }
+
+    return Response(
+        {
+            "message": "PayU checkout prepared",
+            "order_id": order.order_id,
+            "payment_url": settings.PAYU_BASE_URL,
+            "payu_fields": payu_fields
+        },
+        status=status.HTTP_201_CREATED
+    )
+
+
+def verify_payu_transaction(txnid):
+    key = settings.PAYU_KEY
+    salt = settings.PAYU_SALT
+    command = "verify_payment"
+
+    verify_hash = hashlib.sha512(
+        f"{key}|{command}|{txnid}|{salt}".encode("utf-8")
+    ).hexdigest()
+
+    response = requests.post(
+        "https://test.payu.in/merchant/postservice?form=2",
+        data={
+            "key": key,
+            "command": command,
+            "var1": txnid,
+            "hash": verify_hash,
+        },
+        timeout=20,
+    )
+
+    response.raise_for_status()
+    result = response.json()
+
+    if str(result.get("status")) != "1":
+        return None
+
+    transaction_details = result.get("transaction_details", {})
+    return transaction_details.get(txnid)
+def send_make_order_notification(order):
+    webhook_url = getattr(settings, "MAKE_WEBHOOK_URL", "")
+
+    if not webhook_url:
+        return
+
+    payload = {
+        "order_id": order.order_id,
+        "customer_name": order.customer_name,
+        "payment_method": order.payment_method,
+        "total_amount": str(order.total_amount),
+    }
+
+    try:
+        response = requests.post(
+            webhook_url,
+            json=payload,
+            timeout=5,
+        )
+        response.raise_for_status()
+
+    except requests.RequestException:
+        # Do not interrupt a valid order if Make.com is unavailable.
+        return
+
+@csrf_exempt
+@require_POST
+def payu_response(request):
+    """
+    Receive PayU's success/failure response.
+    Verify callback hash and amount, then verify successful
+    payments directly with PayU before marking the order Paid.
+    """
+    data = request.POST
+
+    key = data.get("key", "")
+    txnid = data.get("txnid", "")
+    status_value = data.get("status", "").lower()
+    response_hash = data.get("hash", "").lower()
+
+    amount_value = data.get("amount", "")
+    productinfo = data.get("productinfo", "")
+    firstname = data.get("firstname", "")
+    email = data.get("email", "")
+
+    udf1 = data.get("udf1", "")
+    udf2 = data.get("udf2", "")
+    udf3 = data.get("udf3", "")
+    udf4 = data.get("udf4", "")
+    udf5 = data.get("udf5", "")
+
+    salt = settings.PAYU_SALT
+
+    if not salt:
+        return HttpResponse("PayU salt is not configured.", status=500)
+
+    if not all([key, txnid, status_value, response_hash, amount_value]):
+        return HttpResponse(
+            "Required PayU response fields are missing.",
+            status=400,
+        )
+
+    if key != settings.PAYU_KEY:
+        return HttpResponse("Invalid PayU key.", status=400)
+
+    # Verify PayU's response hash.
+    hash_values = [
+        salt,
+        status_value,
+        "",
+        "",
+        "",
+        "",
+        "",
+        udf5,
+        udf4,
+        udf3,
+        udf2,
+        udf1,
+        email,
+        firstname,
+        productinfo,
+        amount_value,
+        txnid,
+        key,
+    ]
+
+    additional_charges = data.get("additionalCharges", "")
+    if additional_charges:
+        hash_values.insert(0, additional_charges)
+
+    calculated_hash = hashlib.sha512(
+        "|".join(hash_values).encode("utf-8")
+    ).hexdigest().lower()
+
+    if not hmac.compare_digest(calculated_hash, response_hash):
+        return HttpResponse(
+            "PayU response hash verification failed.",
+            status=400,
+        )
+
+    # Find the order created by our backend.
+    try:
+        order = Order.objects.get(order_id=txnid)
+    except Order.DoesNotExist:
+        return HttpResponse("Order not found.", status=404)
+
+    # Compare callback amount with the amount saved in our database.
+    try:
+        response_amount = Decimal(amount_value).quantize(
+            Decimal("0.01")
+        )
+        saved_amount = Decimal(str(order.total_amount)).quantize(
+            Decimal("0.01")
+        )
+    except (InvalidOperation, TypeError, ValueError):
+        return HttpResponse("Invalid payment amount.", status=400)
+
+    if response_amount != saved_amount:
+        return HttpResponse(
+            "Payment amount does not match the order.",
+            status=400,
+        )
+
+    # A success callback is not enough: verify directly with PayU.
+    if status_value == "success":
+        try:
+            verified_payment = verify_payu_transaction(txnid)
+        except (requests.RequestException, ValueError):
+            return HttpResponse(
+                "Could not verify payment with PayU. "
+                "The order has not been marked as paid.",
+                status=502,
+            )
+
+        if not verified_payment:
+            return HttpResponse(
+                "PayU could not confirm this transaction. "
+                "The order has not been marked as paid.",
+                status=502,
+            )
+
+        verified_status = str(
+            verified_payment.get("status", "")
+        ).lower()
+
+        verified_unmapped_status = str(
+            verified_payment.get("unmappedstatus", "")
+        ).lower()
+
+        verified_txnid = str(
+            verified_payment.get("txnid", "")
+        )
+
+        verified_amount = verified_payment.get("amt", "")
+
+        # Require PayU's verified transaction ID and captured status.
+        if (
+            verified_txnid != txnid
+            or verified_status != "success"
+            or verified_unmapped_status != "captured"
+        ):
+            return HttpResponse(
+                "PayU has not confirmed a captured payment. "
+                "The order has not been marked as paid.",
+                status=400,
+            )
+
+        try:
+            verified_amount = Decimal(
+                str(verified_amount)
+            ).quantize(Decimal("0.01"))
+        except (InvalidOperation, TypeError, ValueError):
+            return HttpResponse(
+                "PayU returned an invalid verified amount.",
+                status=400,
+            )
+
+        if verified_amount != saved_amount:
+            return HttpResponse(
+                "Verified PayU amount does not match the order.",
+                status=400,
+            )
+
+        if order.payment_status != "Paid":
+            order.payment_status = "Paid"
+            order.save(update_fields=["payment_status"])
+
+            send_make_order_notification(order)
+
+        return redirect(
+            f"/?payment=success&order_id={order.order_id}"
+        )
+
+    # A verified failure callback does not mark an existing paid order failed.
+    if status_value == "failure":
+        if order.payment_status != "Paid":
+            order.payment_status = "Failed"
+            order.save(update_fields=["payment_status"])
+
+        return redirect(
+    f"/?payment=failed&order_id={order.order_id}"
+)
+
+    return redirect(
+    f"/?payment=pending&order_id={order.order_id}"
+)
 
     # --------------------------------------------------------
     # Validate food items
@@ -188,6 +727,13 @@ def create_order(request):
     # Create Order
     # --------------------------------------------------------
 
+        # Set payment status based on the selected method
+    if payment_method == "Cash on Delivery":
+        payment_status = "Not Required"
+    else:
+        payment_status = "Pending"
+
+    # Create Order
     order = Order.objects.create(
         user=request.user,
         order_id=order_id,
@@ -195,6 +741,7 @@ def create_order(request):
         phone=phone,
         address=address,
         payment_method=payment_method,
+        payment_status=payment_status,
         total_amount=total_amount,
         status="Pending"
     )
@@ -216,6 +763,35 @@ def create_order(request):
     # Return created order
     # --------------------------------------------------------
 
+    #send order details to Make.com
+def send_make_order_notification(order):
+    webhook_url = getattr(settings, "MAKE_WEBHOOK_URL", "")
+
+    if not webhook_url:
+        print("Make.com error: webhook URL is missing")
+        return
+
+    print("Make.com: sending order notification")
+
+    payload = {
+        "order_id": order.order_id,
+        "customer_name": order.customer_name,
+        "payment_method": order.payment_method,
+        "total_amount": str(order.total_amount),
+    }
+
+    try:
+        response = requests.post(
+            webhook_url,
+            json=payload,
+            timeout=10,
+        )
+
+        print("Make.com HTTP status:", response.status_code)
+        response.raise_for_status()
+
+    except requests.RequestException as error:
+        print("Make.com request failed:", error)
     serializer = OrderSerializer(order)
 
     return Response(
@@ -270,6 +846,7 @@ def register_user(request):
         CustomerProfile.objects.create(
             user=user,
             phone=phone
+
         )
 
         return Response(

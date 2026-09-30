@@ -1924,254 +1924,163 @@ function updateCheckoutSummary() {
 
 }
 
-
 /* =========================================================
    PLACE ORDER
 ========================================================= */
 
-async function placeOrder(
-    event
-) {
-
+async function placeOrder(event) {
     if (event) {
-
         event.preventDefault();
-
         event.stopPropagation();
-
     }
 
-
-    const authToken =
-        localStorage.getItem(
-            "authToken"
-        );
-
+    const authToken = localStorage.getItem("authToken");
 
     if (!authToken) {
-
-        alert(
-            "Please login before placing an order."
-        );
-
+        alert("Please login before placing an order.");
         closeCheckout();
-
         openLogin();
-
         return;
     }
 
-
-    if (
-        !cart ||
-        cart.length === 0
-    ) {
-
-        alert(
-            "Your cart is empty."
-        );
-
+    if (!cart || cart.length === 0) {
+        alert("Your cart is empty.");
         return;
     }
-
 
     const customerName =
-        document.getElementById(
-            "customerName"
-        )?.value.trim();
-
+        document.getElementById("customerName")?.value.trim();
 
     const phone =
-        document.getElementById(
-            "customerPhone"
-        )?.value.trim();
-
+        document.getElementById("customerPhone")?.value.trim();
 
     const address =
-        document.getElementById(
-            "customerAddress"
-        )?.value.trim();
-
+        document.getElementById("customerAddress")?.value.trim();
 
     const paymentMethod =
-        document.getElementById(
-            "paymentMethod"
-        )?.value;
+        document.getElementById("paymentMethod")?.value;
 
-
-    if (
-        !customerName ||
-        !phone ||
-        !address ||
-        !paymentMethod
-    ) {
-
-        alert(
-            "Please fill all checkout details."
-        );
-
+    if (!customerName || !phone || !address || !paymentMethod) {
+        alert("Please fill all checkout details.");
         return;
     }
 
+    if (!["Cash on Delivery", "UPI", "Card"].includes(paymentMethod)) {
+        alert("Please select a valid payment method.");
+        return;
+    }
 
-    const subtotal =
-        cart.reduce(
-            function (
-                total,
-                item
-            ) {
+    const subtotal = cart.reduce(function (total, item) {
+    return total + Number(item.price) * Number(item.quantity);
+}, 0);
 
-                return (
-                    total +
-                    Number(
-                        item.price
-                    ) *
-                    Number(
-                        item.quantity
-                    )
-                );
-
-            },
-            0
-        );
+const deliveryFee = 40;
+const totalAmount = subtotal + deliveryFee;
 
 
-    const deliveryFee =
-        40;
-
-
-    const totalAmount =
-        subtotal +
-        deliveryFee;
-
-
-const orderItems = cart.map(function (item) {
-
-    const foodId = Number(item.id);
-    const quantity = Number(item.quantity);
-    const price = Number(item.price);
-
-    console.log("Preparing order item:", {
-        foodId: foodId,
-        quantity: quantity,
-        price: price,
-        originalItem: item
+    const orderItems = cart.map(function (item) {
+        return {
+            food: Number(item.id),
+            quantity: Number(item.quantity)
+        };
     });
 
-    return {
-        food: foodId,
-        quantity: quantity,
-        price: price
+    const requestBody = {
+        customer_name: customerName,
+        phone: phone,
+        address: address,
+        payment_method: paymentMethod,
+        total_amount:totalAmount,
+        items: orderItems
     };
 
-});
-
+    // COD uses the existing order endpoint.
+    // UPI/Card use the PayU initiation endpoint.
+    const endpoint =
+        paymentMethod === "Cash on Delivery"
+            ? `${API_URL}/orders/`
+            : `${API_URL}/payu/initiate/`;
 
     try {
+        const response = await fetch(endpoint, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Token ${authToken}`
+            },
+            body: JSON.stringify(requestBody)
+        });
 
-        const response =
-            await fetch(
-                `${API_URL}/orders/`,
-                {
-
-                    method:
-                        "POST",
-
-                    headers: {
-
-                        "Content-Type":
-                            "application/json",
-
-                        "Authorization":
-                            `Token ${authToken}`
-
-                    },
-
-                    body:
-                        JSON.stringify({
-
-                            customer_name:
-                                customerName,
-
-                            phone:
-                                phone,
-
-                            address:
-                                address,
-
-                            payment_method:
-                                paymentMethod,
-
-                            total_amount:
-                                totalAmount,
-
-                            items:
-                                orderItems
-
-                        })
-
-                }
-            );
-
-
-        const data =
-            await response.json();
-
+        const data = await response.json();
 
         if (!response.ok) {
-
-            
-            
-            console.error(
-                "Order error:",
-                data
-            );
-
+            console.error("Order/payment error:", data);
 
             alert(
+                data.error ||
                 data.detail ||
-                "Order could not be placed."
+                "Could not process your order."
             );
-
 
             return;
         }
 
+        // -------------------------------------------------
+        // PAYU HOSTED CHECKOUT — UPI OR CARD
+        // -------------------------------------------------
 
-        /* Clear cart */
+        if (paymentMethod === "UPI" || paymentMethod === "Card") {
+            if (!data.payment_url || !data.payu_fields) {
+                console.error("Unexpected PayU response:", data);
+                alert("PayU checkout details were not received.");
+                return;
+            }
+
+            const payuForm = document.createElement("form");
+
+            payuForm.method = "POST";
+            payuForm.action = data.payment_url;
+            payuForm.style.display = "none";
+
+            Object.entries(data.payu_fields).forEach(
+                function ([name, value]) {
+                    const input = document.createElement("input");
+
+                    input.type = "hidden";
+                    input.name = name;
+                    input.value = value ?? "";
+
+                    payuForm.appendChild(input);
+                }
+            );
+
+            document.body.appendChild(payuForm);
+
+            // Send the browser to PayU's hosted checkout.
+            payuForm.submit();
+
+            return;
+        }
+
+        // -------------------------------------------------
+        // CASH ON DELIVERY
+        // -------------------------------------------------
 
         cart = [];
 
-
         saveCart();
-
         updateCartCount();
 
-
         closeCheckout();
-
         closePayment();
 
-
-        showOrderConfirmation(
-            data
-        );
-
+        showOrderConfirmation(data);
 
     } catch (error) {
+        console.error("Order/payment error:", error);
 
-        console.error(
-            "Order error:",
-            error
-        );
-
-
-        alert(
-            "Could not connect to the server."
-        );
-
+        alert("Could not connect to the server.");
     }
-
 }
 
 
@@ -3831,129 +3740,9 @@ function closePayment() {
    PROCESS PAYMENT
 ========================================================= */
 
-function processPayment() {
-
-    const paymentMethod =
-        document.getElementById(
-            "paymentMethod"
-        )?.value;
-
-
-    if (
-        paymentMethod ===
-        "UPI"
-    ) {
-
-        const upiId =
-            document.getElementById(
-                "upiId"
-            )?.value.trim();
-
-
-        if (!upiId) {
-
-            alert(
-                "Please enter your UPI ID."
-            );
-
-            return;
-        }
-
-
-        if (
-            !upiId.includes("@")
-        ) {
-
-            alert(
-                "Please enter a valid UPI ID."
-            );
-
-            return;
-        }
-
-    }
-
-
-    if (
-        paymentMethod ===
-        "Card"
-    ) {
-
-        const cardNumber =
-            document.getElementById(
-                "cardNumber"
-            )?.value.trim();
-
-
-        const cardExpiry =
-            document.getElementById(
-                "cardExpiry"
-            )?.value.trim();
-
-
-        const cardCVV =
-            document.getElementById(
-                "cardCVV"
-            )?.value.trim();
-
-
-        if (
-            !cardNumber ||
-            !cardExpiry ||
-            !cardCVV
-        ) {
-
-            alert(
-                "Please fill all card details."
-            );
-
-            return;
-        }
-
-
-        if (
-            cardNumber.length < 12
-        ) {
-
-            alert(
-                "Please enter a valid card number."
-            );
-
-            return;
-        }
-
-
-        if (
-            cardCVV.length !== 3
-        ) {
-
-            alert(
-                "Please enter a valid CVV."
-            );
-
-            return;
-        }
-
-    }
-
-
-    /*
-       This is still a DEMO payment.
-       No real money is processed.
-    */
-
-    alert(
-        "Payment successful! 🎉"
-    );
-
-
-    closePayment();
-
-
-    placeOrder();
-
+function processPayment(event) {
+    placeOrder(event);
 }
-
 
 /* =========================================================
    CLOSE OVERLAYS WHEN CLICKING OUTSIDE
@@ -4786,3 +4575,45 @@ if (removeButton) {
 
     });
 }
+
+/* =========================================================
+   PAYU PAYMENT RESULT
+========================================================= */
+
+(function showPayUPaymentResult() {
+    const params = new URLSearchParams(window.location.search);
+
+    const paymentStatus = params.get("payment");
+    const orderId = params.get("order_id");
+
+    if (paymentStatus === "success") {
+        // Clear cart only after successful payment
+        cart = [];
+        saveCart();
+        updateCartCount();
+        displayCart();
+
+        alert(
+            `Payment successful! 🎉\n\nYour order ${orderId || ""} has been paid.`
+        );
+
+    } else if (paymentStatus === "failed") {
+        alert(
+            `Payment failed.\n\nYour order ${orderId || ""} was not paid.`
+        );
+
+    } else if (paymentStatus === "pending") {
+        alert(
+            `Payment status is pending.\n\nPlease check your order status.`
+        );
+    }
+
+    // Remove payment query from the address bar
+    if (paymentStatus) {
+        window.history.replaceState(
+            {},
+            document.title,
+            window.location.pathname
+        );
+    }
+})();

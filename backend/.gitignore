@@ -1,19 +1,27 @@
-.env
-venv/
-__pycache__/
-*.pyc
-db.sqlite3
-
 # Environment variables
+.env
 .env.*
 !.env.example
 
-# Python and Django
+# Python virtual environment
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Database
+db.sqlite3
+*.sqlite3
+
+# Django
 *.log
 staticfiles/
 
-# Editor and OS files
+# Editor
 .vscode/
+.idea/
+
+# Operating system
 .DS_Store
 Thumbs.db
-.vscode/

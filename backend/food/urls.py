@@ -3,6 +3,7 @@ from django.urls import path
 from .views import (
     food_list,
     create_order,
+    initiate_payu_payment,
     my_orders,
     register_user,
     login_user,
@@ -10,7 +11,8 @@ from .views import (
     dashboard_summary,
     admin_orders,
     favorites,
-    customer_profile
+    customer_profile,
+    payu_response,
 )
 
 
@@ -24,6 +26,11 @@ urlpatterns = [
     path(
         "orders/",
         create_order
+    ),
+
+    path(
+        "payu/initiate/",
+        initiate_payu_payment
     ),
 
     path(
@@ -60,4 +67,7 @@ urlpatterns = [
          favorites),
 
     path("profile/", customer_profile),
+
+    path("payu/response/", payu_response,
+         name="payu_response"),
 ]

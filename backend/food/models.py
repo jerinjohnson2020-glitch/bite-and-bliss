@@ -40,7 +40,7 @@ class Food(models.Model):
     description = models.TextField(
     blank=True
 
-    ) 
+    )
 
 
     def __str__(self):
@@ -48,6 +48,7 @@ class Food(models.Model):
 
 
 class Order(models.Model):
+
 
     STATUS_CHOICES = [
 
@@ -102,6 +103,18 @@ class Order(models.Model):
         decimal_places=2
     )
 
+    PAYMENT_STATUS_CHOICES = [
+        ("Pending", "Pending"),
+        ("Paid", "Paid"),
+        ("Failed", "Failed"),
+        ("Not Required", "Not Required"),
+    ]
+
+    payment_status = models.CharField(
+        max_length=20,
+        choices=PAYMENT_STATUS_CHOICES,
+        default="Pending"
+    )
 
     status = models.CharField(
         max_length=30,
